@@ -9,6 +9,11 @@ const { isObject, assign } = require('lodash');
 // Local vars
 const foldir = process.cwd() + "/public";
 
+//initialse local folder
+if (!fs.existsSync("./trees")){
+  fs.mkdirSync("./trees");
+}
+
 // Master keywords
 let masterKeywords = { //includes
   createObjectK: 'n', // new
