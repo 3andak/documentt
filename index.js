@@ -19,7 +19,7 @@ let masterKeywords = { //includes
 
 let masterKeywordsHelper = {
   createObjectK: ['create an object: \''+ masterKeywords.createObjectK + ' objname\''], // new
-  addToObjectK: ['modify method not implemented: \''+ masterKeywords.addToObjectK+ '\''],
+  addToObjectK: ['add property to existing object: \''+ masterKeywords.addToObjectK+ '\''],
   setActiveObjectK: ['set active object: \''+ masterKeywords.setActiveObjectK + ' objname\''], //set
   listObjectsK: ['list object: \''+ masterKeywords.listObjectsK + '\''] //list
 }
@@ -89,14 +89,12 @@ function showarr(obj, type = 1) {
           // Core methods
           try {
 
-            // Retrieve arguments given at each request and store it in arg variable
+            ////// Retrieve arguments given at each request and store it in arg variable
           let arg = []
-
            // Split arguments into words
           for (let i = 0; i < msg.split(" ").length; i++) {
             arg[i] =  msg.split(" ")[i]
             if (arg[i] == '') {arg.splice(i)}
-
               // Remove all non alphanumerical characters from user input and throw error if any
             if (/\W/g.test(arg[i]) == true ) {
               io.emit("channel1", "Error Type Nikoumouk")
@@ -104,11 +102,10 @@ function showarr(obj, type = 1) {
             }
           }
 
-          // Create new obj using keyword routine
-
+          ////// Create new obj using keyword routine
           if(arg[0] == masterKeywords.createObjectK && arg.length === 2 )  {
-            //  Prevent create object method overwriting existing objects
 
+            //  Prevent create object method overwriting existing objects
             fs.access(process.cwd() + "\\trees\\" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try{
               if (e == null) {
@@ -118,20 +115,19 @@ function showarr(obj, type = 1) {
              }
              else {
 
-              // Actual create object method
+             ////// Actual create object method
              var tree = {'_': {'name': arg[1] }}
              tree._.createdTime = new Date()
-
               // Print obj to webbrowser
              show(tree)
-
               // Write local json file
              fs.writeFileSync(process.cwd() + "/trees/" + tree._.name + ".json", JSON.stringify(tree, null, 2), 'utf8') 
             }
            } catch (err) {console.error(err)}
          })
         }
-            // Prevent misuse of masterkeywords
+
+            ////// Prevent misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 )  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
@@ -142,7 +138,25 @@ function showarr(obj, type = 1) {
             }
           }
 
-          // Master method: list existing objects 
+          ////// master method: add property to existing object
+          if(arg[0] == masterKeywords.addToObjectK && arg.length === 2 )  {
+            try {
+           if (activeTree != undefined) {
+             console.log("working on", activeTree._.name)
+           }
+
+          } catch(e) {
+            if (e.name == "ReferenceError") {
+              
+              if (e.message == "activeTree is not defined")
+              io.emit("channel1", "can't modify as no active obj is set")
+            }
+              else {
+            console.log(e)}
+          }
+          }
+
+          ////// Master method: list existing objects
           if(arg[0] == masterKeywords.listObjectsK && arg.length === 1 )  {
             var files = fs.readdirSync(process.cwd() + "/trees")
             showarr(files)
@@ -152,7 +166,7 @@ function showarr(obj, type = 1) {
             console.log(files)
           }
 
-          // Master method: set active object
+          ////// Master method: set active object
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try {
@@ -160,6 +174,7 @@ function showarr(obj, type = 1) {
                   activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
                   show(activeTree)
                   console.log(arg[1], "object loaded")
+
                  }
 
                 // Prevent set method to activate non-existing object
@@ -171,8 +186,7 @@ function showarr(obj, type = 1) {
             })
          }
 
-
-        // Catch method for initial try:
+        /// Catch method for initial try:
           } catch(e) {console.error(e)}
         });
       });
