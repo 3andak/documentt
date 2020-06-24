@@ -126,28 +126,24 @@ for (file of files) {
             showarr(files)
             console.log(files, process.cwd())
           }
-
+          // master method: set active object
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try {
               if(e == null) {
             activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
-            //console.log(activeTree)}
             show(activeTree)
-            console.log("object loaded")
+            console.log(arg[1], "object loaded")
               }
-          else{
+            // prevent set method to activate non-existing object
+          else { 
             io.emit("channel1", "Object 404")
             throw("Invalid Tree name")
           }
         } catch(err) {console.error(err)}
           })
         }
-
           } catch(e) {console.error(e)}
-
-
-
         });
       });
 
