@@ -1,19 +1,15 @@
 const app = require('express')();
 const express = require("express");
-const { createCipheriv } = require('crypto');
-
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 const fs = require("fs");
 const { isObject, assign } = require('lodash');
-const { emit } = require('process');
-//const { emit } = require('process');
+
+// Local vars
 const foldir = process.cwd() + "/public";
 
-
 // Master keywords
-
 let masterKeywords = { //includes
   createObjectK: 'n', // new
   addToObjectK: 'e', // edit
@@ -21,7 +17,7 @@ let masterKeywords = { //includes
   listObjectsK: 'l' //list
 }
 
-//array string proto method
+// New toString proto method for arrays (: instead of ,)
 Array.prototype.str = function() {
   b = ""
     for (a of this) {
@@ -33,36 +29,26 @@ Array.prototype.str = function() {
     return b
   }
 
-//print all object and subobjects
+// Method to print all object and subobjects to the webbrowser
 function show(obj) {
-
   for (o in obj) {
     io.emit('channel2', [o, obj[o]].str() )
     if (isObject( obj[o])) {
        show(obj[o])
     }
-    else {
-     
+  }
+}
+
+// Method to print arrays to the webbrowser
+function showarr(obj) {
+  for (o in obj) {
+    if ( typeof(obj[o]) != 'function' ) {
+    io.emit('channel1', obj[o].substr(0,  obj[o].length -5) )
     }
   }
 }
 
-function showarr(obj) {
-
-  for (o in obj) {
-    if ( typeof(obj[o]) != 'function' ) {
-    io.emit('channel1', obj[o].substr(0,  obj[o].length -5) ) 
-  }
-  }
-}
-
-var files = fs.readdirSync(process.cwd() + "/trees")
-names = []
-for (file of files) {
-  names.push(file.split('.').slice(0, -1).join('.'))
-}
-
-//serving
+// Serving app
     app.set("view engine", "pug");
     app.use(express.static(foldir));
     app.get("/", function (req, res, next) {
@@ -71,7 +57,7 @@ for (file of files) {
       });
       next();
     });
-// socket instance listening to user input: opening dialog
+// Socket.io instance listening to user input: opening dialog
     io.on('connection', (socket) => {
         socket.on('channel1', (msg) => {
           io.emit('channel1', msg);
@@ -81,25 +67,25 @@ for (file of files) {
 
           try {
 
-            // retrieve arguments given at each request and store it in arg variable
+            // Retrieve arguments given at each request and store it in arg variable
           let arg = []
 
-           // split arguments into words
+           // Split arguments into words
           for (let i = 0; i < msg.split(" ").length; i++) {
             arg[i] =  msg.split(" ")[i]
             if (arg[i] == '') {arg.splice(i)}
 
-              // remove all non alphanumerical characters from user input and throw error if any
+              // Remove all non alphanumerical characters from user input and throw error if any
             if (/\W/g.test(arg[i]) == true ) {
               io.emit("channel1", "Error Type Nikoumouk")
               throw("Nikoumouk")
             }
           }
 
-          // create new obj using keyword routine
+          // Create new obj using keyword routine
 
           if(arg[0] == masterKeywords.createObjectK && arg.length === 2 )  {
-            //  prevent create object method overwriting existing objects
+            //  Prevent create object method overwriting existing objects
 
             fs.access(process.cwd() + "\\trees\\" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try{
@@ -110,21 +96,21 @@ for (file of files) {
              }
              else {
 
-              // actual create object method
+              // Actual create object method
              var tree = {'_': {'name': arg[1] }}
              tree._.createdTime = new Date()
 
-              // print obj to webbrowser
+              // Print obj to webbrowser
              show(tree)
 
-              // write local json file
+              // Write local json file
              fs.writeFileSync(process.cwd() + "/trees/" + tree._.name + ".json", JSON.stringify(tree, null, 2), 'utf8') 
             }
            } catch (err) {console.error(err)}
          })
         }
 
-            // prevent misuse of masterkeywords
+            // Prevent misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 )  {
           if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
            || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
@@ -134,14 +120,14 @@ for (file of files) {
           }
         }
 
-          // master method: list existing objects 
+          // Master method: list existing objects 
           if(arg[0] == masterKeywords.listObjectsK && arg.length === 1 )  {
             var files = fs.readdirSync(process.cwd() + "/trees")
             showarr(files)
             console.log(files, process.cwd())
           }
 
-          // master method: set active object
+          // Master method: set active object
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try {
@@ -151,8 +137,8 @@ for (file of files) {
             console.log(arg[1], "object loaded")
               }
 
-            // prevent set method to activate non-existing object
-          else { 
+            // Prevent set method to activate non-existing object
+          else {
             io.emit("channel1", "Object 404")
             throw("Invalid Tree name")
           }
