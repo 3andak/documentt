@@ -71,7 +71,7 @@ for (file of files) {
       });
       next();
     });
-
+// socket instance listening to user input: opening dialog
     io.on('connection', (socket) => {
         socket.on('channel1', (msg) => {
           io.emit('channel1', msg);
@@ -80,37 +80,50 @@ for (file of files) {
           }
 
           try {
+
+            // retrieve arguments given at each request and store it in arg variable
           let arg = []
+
+           // split arguments into words
           for (let i = 0; i < msg.split(" ").length; i++) {
             arg[i] =  msg.split(" ")[i]
             if (arg[i] == '') {arg.splice(i)}
+
+              // remove all non alphanumerical characters from user input and throw error if any
             if (/\W/g.test(arg[i]) == true ) {
               io.emit("channel1", "Error Type Nikoumouk")
               throw("Nikoumouk")
             }
           }
-          // create new obj using keyword
+
+          // create new obj using keyword routine
+
           if(arg[0] == masterKeywords.createObjectK && arg.length === 2 )  {
+            //  prevent create object method overwriting existing objects
+
             fs.access(process.cwd() + "\\trees\\" + arg[1] + ".json", fs.constants.F_OK, (e) => {
-              try{ 
-                //  prevent create object method to overwrite existing objects
+              try{
               if (e == null) {
               console.log("you ain\'t god")
               io.emit('channel1', "new is new, use \'" + masterKeywords.addToObjectK + "\' special keyword to modify existing object")
               throw("Can't create an existing object.")
              }
-          else {
-              // create object method
+             else {
+
+              // actual create object method
              var tree = {'_': {'name': arg[1] }}
              tree._.createdTime = new Date()
+
               // print obj to webbrowser
-             show(tree) 
+             show(tree)
+
               // write local json file
              fs.writeFileSync(process.cwd() + "/trees/" + tree._.name + ".json", JSON.stringify(tree, null, 2), 'utf8') 
             }
            } catch (err) {console.error(err)}
          })
         }
+
             // prevent misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 )  {
           if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
@@ -120,12 +133,14 @@ for (file of files) {
             throw("invalid syntax: " + arg[0] + " method needs arg")
           }
         }
+
           // master method: list existing objects 
           if(arg[0] == masterKeywords.listObjectsK && arg.length === 1 )  {
             var files = fs.readdirSync(process.cwd() + "/trees")
             showarr(files)
             console.log(files, process.cwd())
           }
+
           // master method: set active object
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
@@ -135,6 +150,7 @@ for (file of files) {
             show(activeTree)
             console.log(arg[1], "object loaded")
               }
+
             // prevent set method to activate non-existing object
           else { 
             io.emit("channel1", "Object 404")
