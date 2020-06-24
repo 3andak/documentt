@@ -112,13 +112,14 @@ function showarr(obj) {
 
             // Prevent misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 )  {
-          if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
-           || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
-           || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3)  {
-            io.emit('channel1', "invalid syntax: " + arg[0] + " method needs 1 arg")
-            throw("invalid syntax: " + arg[0] + " method needs arg")
+            if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
+             || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
+             || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3)  {
+
+              io.emit('channel1', "invalid syntax: " + arg[0] + " method needs 1 arg")
+              throw("invalid syntax: " + arg[0] + " method needs arg")
+            }
           }
-        }
 
           // Master method: list existing objects 
           if(arg[0] == masterKeywords.listObjectsK && arg.length === 1 )  {
@@ -131,22 +132,26 @@ function showarr(obj) {
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try {
-              if(e == null) {
-            activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
-            show(activeTree)
-            console.log(arg[1], "object loaded")
-              }
+                if(e == null) {
+                  activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
+                  show(activeTree)
+                  console.log(arg[1], "object loaded")
+                 }
 
-            // Prevent set method to activate non-existing object
-          else {
-            io.emit("channel1", "Object 404")
-            throw("Invalid Tree name")
-          }
-        } catch(err) {console.error(err)}
-          })
-        }
+                // Prevent set method to activate non-existing object
+               else {
+                  io.emit("channel1", "Object 404")
+                  throw("Invalid Tree name")
+                 }
+              } catch(err) {console.error(err)}
+            })
+         }
+
+
+        // Catch method for initial try:
           } catch(e) {console.error(e)}
         });
       });
+
 
 server.listen(80);
