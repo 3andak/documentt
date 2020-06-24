@@ -143,11 +143,16 @@ function showarr(obj, type = 1) {
             try {
            if (activeTree != undefined) {
              console.log("working on", activeTree._.name)
+             activeTree[arg[1]] = {'_': {'name': arg[1] }}
+             activeTree[arg[1]]._.createdTime = new Date()
+             fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
+             io.emit("channel1", "object modified and saved, added key " + activeTree._.name + "." + activeTree[arg[1]]._.name  )
+             show(activeTree)
            }
+
 
           } catch(e) {
             if (e.name == "ReferenceError") {
-              
               if (e.message == "activeTree is not defined")
               io.emit("channel1", "can't modify as no active obj is set")
             }
@@ -172,6 +177,7 @@ function showarr(obj, type = 1) {
               try {
                 if(e == null) {
                   activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
+                  io.emit("channel1", "object " + arg[1] + " is now active")
                   show(activeTree)
                   console.log(arg[1], "object loaded")
 
