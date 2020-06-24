@@ -8,6 +8,7 @@ const { isObject, assign } = require('lodash');
 
 // Local vars
 const foldir = process.cwd() + "/public";
+let helperAtStartup = false 
 
 //initialse local folder
 if (!fs.existsSync("./trees")){
@@ -16,17 +17,21 @@ if (!fs.existsSync("./trees")){
 
 // Master keywords
 let masterKeywords = { //includes
-  createObjectK: 'n', // new
-  addToObjectK: 'e', // edit
-  setActiveObjectK: 's', //set
-  listObjectsK: 'l' //list
+  createObjectK: 'new', // new
+  addToObjectK: 'push', // edit
+  setActiveObjectK: 'set', //set
+  listObjectsK: 'list', //list
+  navigateObject: 'sub',
+  getTreeStructureK: 'what' //
 }
 
 let masterKeywordsHelper = {
   createObjectK: ['create an object: \''+ masterKeywords.createObjectK + ' objname\''], // new
   addToObjectK: ['add property to existing object: \''+ masterKeywords.addToObjectK+ '\''],
   setActiveObjectK: ['set active object: \''+ masterKeywords.setActiveObjectK + ' objname\''], //set
-  listObjectsK: ['list object: \''+ masterKeywords.listObjectsK + '\''] //list
+  listObjectsK: ['list object in tree folder: \''+ masterKeywords.listObjectsK + '\''], //list
+  navigateObject: ['navigate sub object: (unfinished method) \''+ masterKeywords.navigateObject + '\''], //list
+  getTreeStructureK: ['print tree \''+ masterKeywords.getTreeStructureK + '\''] //list
 }
 
 // New toString proto method for arrays (: instead of ,)
@@ -51,6 +56,7 @@ function show(obj) {
   }
 }
 
+
 // Methods to print arrays to the webbrowser
 function showarr(obj, type = 1) {
   for (o in obj) {
@@ -65,6 +71,9 @@ function showarr(obj, type = 1) {
   }
 }
 
+// Method to read Tree architecture of Object
+getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o[k],k=s?s+['.'+k]:k,io.emit("channel2", k)   ))
+
 // Serving app
     app.set("view engine", "pug");
     app.use(express.static(foldir));
@@ -78,9 +87,10 @@ function showarr(obj, type = 1) {
     io.on('connection', (socket) => {
 
       // helper notice
+      if (helperAtStartup == true) {
       io.emit("channel1", "help: existing methods: ")
       showarr(masterKeywordsHelper, 2)
-
+      }
         socket.on('channel1', (msg) => {
 
           // printing self to the browser
@@ -133,7 +143,7 @@ function showarr(obj, type = 1) {
         }
 
             ////// Prevent misuse of masterkeywords
-          if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 )  {
+          if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 && arg[0] != masterKeywords.getTreeStructureK)  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3)  {
@@ -143,10 +153,10 @@ function showarr(obj, type = 1) {
             }
           }
 
-          ////// master method: add property to existing object
+          ////// master method: add property to existing object // branch level 1
           if(arg[0] == masterKeywords.addToObjectK && arg.length === 2 )  {
             try {
-           if (activeTree != undefined) {
+           if (typeof activeTree != undefined && typeof activeBranch === 'undefined')  {
              console.log("working on", activeTree._.name)
              activeTree[arg[1]] = {'_': {'name': arg[1] }}
              activeTree[arg[1]]._.createdTime = new Date()
@@ -154,8 +164,6 @@ function showarr(obj, type = 1) {
              io.emit("channel1", "object modified and saved, added key " + activeTree._.name + "." + activeTree[arg[1]]._.name  )
              show(activeTree)
            }
-
-
           } catch(e) {
             if (e.name == "ReferenceError") {
               if (e.message == "activeTree is not defined")
@@ -163,6 +171,15 @@ function showarr(obj, type = 1) {
             }
               else {
             console.log(e)}
+          }
+          if (typeof activeBranch === 'undefined' && typeof activeTree === 'undefined') {
+            console.log("no branch no chocolate")
+          }
+          if(typeof activeBranch != 'undefined' && typeof activeTree != 'undefined') {
+            activeTree[activeBranch._.name][arg[1]] = {'_': {'name': arg[1], createdTime: new Date() }}
+           // console.log("choco", activeBranch._.name)
+            fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
+           
           }
           }
 
@@ -175,6 +192,17 @@ function showarr(obj, type = 1) {
             }
             console.log(files)
           }
+
+          ////// Master method: print tree architecture
+          console.log(arg[0] == masterKeywords.getTreeStructureK, arg.length === 1)
+          if(arg[0] == masterKeywords.getTreeStructureK && arg.length === 1 && typeof activeTree != 'undefined')  {
+            console.log("chocho")
+            getTreeStructure(activeTree)
+          }
+         
+
+          ////// Treat with undefined objects
+
 
           ////// Master method: set active object
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
@@ -195,6 +223,18 @@ function showarr(obj, type = 1) {
                  }
               } catch(err) {console.error(err)}
             })
+         }
+         ////// Set subobject as active branch //only 2 sublevels possible for now
+         if(arg[0] == masterKeywords.navigateObject && arg.length === 2 )  {
+           if (typeof activeTree === 'undefined') {
+             io.emit("channel1", "Can\'t navigate when object is not set")
+             throw("Can\'t navigate when object is not set")
+           }
+           else {
+            activeBranch = activeTree[arg[1].toString()]
+            console.log(activeBranch)
+            io.emit("channel1", "Active branch is: "+ activeTree._.name + "." + activeBranch._.name)
+           }
          }
 
         /// Catch method for initial try:
