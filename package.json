@@ -1,0 +1,22 @@
+{
+  "name": "documentt",
+  "version": "1.0.0",
+  "description": "A web/console mode interface to dialog with your Objects",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "pug": "^3.0.0",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "nodejs index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "documentt"
+  },
+  "author": "daniel the hacker",
+  "license": "CAL-1.0"
+}
