@@ -17,6 +17,13 @@ let masterKeywords = { //includes
   listObjectsK: 'l' //list
 }
 
+let masterKeywordsHelper = {
+  createObjectK: ['create an object: \''+ masterKeywords.createObjectK + ' objname\''], // new
+  addToObjectK: ['modify method not implemented: \''+ masterKeywords.addToObjectK+ '\''],
+  setActiveObjectK: ['set active object: \''+ masterKeywords.setActiveObjectK + ' objname\''], //set
+  listObjectsK: ['list object: \''+ masterKeywords.listObjectsK + '\''] //list
+}
+
 // New toString proto method for arrays (: instead of ,)
 Array.prototype.str = function() {
   b = ""
@@ -39,11 +46,16 @@ function show(obj) {
   }
 }
 
-// Method to print arrays to the webbrowser
-function showarr(obj) {
+// Methods to print arrays to the webbrowser
+function showarr(obj, type = 1) {
   for (o in obj) {
     if ( typeof(obj[o]) != 'function' ) {
+      if(type == 1) {
     io.emit('channel1', obj[o].substr(0,  obj[o].length -5) )
+    }
+    if(type == 2) {
+      io.emit('channel1', obj[o] )
+      }
     }
   }
 }
@@ -59,12 +71,22 @@ function showarr(obj) {
     });
 // Socket.io instance listening to user input: opening dialog
     io.on('connection', (socket) => {
+
+      // helper notice
+      io.emit("channel1", "help: existing methods: ")
+      showarr(masterKeywordsHelper, 2)
+
         socket.on('channel1', (msg) => {
+
+          // printing self to the browser
           io.emit('channel1', msg);
+
+          // secret methods
           if (msg === "chebka") {
             io.emit('channel1', "tan tan tan!")
           }
 
+          // Core methods
           try {
 
             // Retrieve arguments given at each request and store it in arg variable
@@ -109,7 +131,6 @@ function showarr(obj) {
            } catch (err) {console.error(err)}
          })
         }
-
             // Prevent misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 )  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
@@ -125,7 +146,10 @@ function showarr(obj) {
           if(arg[0] == masterKeywords.listObjectsK && arg.length === 1 )  {
             var files = fs.readdirSync(process.cwd() + "/trees")
             showarr(files)
-            console.log(files, process.cwd())
+            if (files.length == 0) {
+              io.emit("channel1", "no object yet, try creating one using \'" + masterKeywords.createObjectK + "\' master keyword")
+            }
+            console.log(files)
           }
 
           // Master method: set active object
