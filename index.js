@@ -160,14 +160,14 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
          })
         }
 
-            ////// Prevent misuse of masterkeywords 
+            ////// Prevent general misuse of masterkeywords 
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 && arg[0] != masterKeywords.getTreeStructureK)  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3)  {
 
               io.emit('channel1', "invalid syntax: " + arg[0] + " method needs 1 arg")
-              throw("invalid syntax: " + arg[0] + " method needs arg")
+              console.error("invalid syntax: " + arg[0] + " method needs arg")
             }
           }
 
@@ -177,10 +177,8 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
               if (typeof activeTree != undefined)  {
                 if (treePath.length == 0) {
                   activeTree[arg[1]] = dataStruct
-                  treePath.push(arg[1])
                   store(arg[1])
                 } else {
-                  treePath.push(arg[1])
                   dataStructStr = JSON.stringify(dataStruct, null, 2)
                   console.log(eval("activeTree" + branchage + "['" + arg[1] + "'] = " + dataStructStr))
                   eval("activeTree" + branchage + "['" + arg[1] + "'] = " + dataStructStr)
@@ -232,9 +230,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
                   io.emit("channel1", "object " + arg[1] + " is now active")
                   show(activeTree)
                   console.log(arg[1], "object loaded")
-
                  }
-
                 // Prevent set method to activate non-existing object
                else {
                   io.emit("channel1", "Object 404")
@@ -243,28 +239,30 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
               } catch(err) {console.error(err)}
             })
          }
-         ////// Set ssbobject as active branch //only 2 sublevels possible for now
+         ////// Set subobject as active branch  // ss method
          if(arg[0] == masterKeywords.navigateObject && arg.length === 2 )  {
            if (typeof activeTree === 'undefined') {
              io.emit("channel1", "Can\'t navigate when object is not set")
-             throw("Can\'t navigate when object is not set")
+             console.error("Can\'t navigate when object is not set")
            }
-
            if (true) { //obj.nom //obj.nom.nom 
-
-
+              branchageOriginal = branchage
               branchage += "['" +arg[1]+ "']"
-
-
-
               if (typeof eval("activeTree" + branchage) == 'undefined') {
                 let arglen = arg[1].length + 4
-                branchage = branchage.substring(arglen, arglen)
+                branchage = branchage.substr(0, branchage.length - arglen)
                 io.emit("channel1", "key doesnt exists")
-               console.error("Cant open non existing subkey")
+             //  throw("Cant open non existing subkey")
             }
             if (typeof eval("activeTree" + branchage) != 'undefined')  {
-              io.emit("channel1", "Active branch is: "+ branchage)
+              let branchName = eval("activeTree" + branchage)
+
+            //  console.log(activeTree[])
+              if(branchageOriginal != branchage) {
+              io.emit("channel1", "Active branch is: "+ activeTree._.name + branchage)
+              treePath.push(arg[1])
+              console.log(treePath)
+            }
             }
 
            }
