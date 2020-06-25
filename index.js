@@ -96,11 +96,11 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
       showarr(masterKeywordsHelper, 2)
       }
 
-      // Store json 
+      // Store json
       function store(arg) {
        fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8')
        io.emit("channel1", "object modified and saved, added key " + arg)
-}
+      }
 
         socket.on('channel1', (msg) => {
 
@@ -160,7 +160,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
          })
         }
 
-            ////// Prevent general misuse of masterkeywords 
+            ////// Prevent general misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 && arg[0] != masterKeywords.getTreeStructureK)  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
@@ -184,7 +184,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
                   eval("activeTree" + branchage + "['" + arg[1] + "'] = " + dataStructStr)
                   store(arg[1])
                 }
-                
+
               }
           } catch(e) {
             if (e.name == "ReferenceError") {
@@ -193,7 +193,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
             }
               else {
             console.log(e)}
-            
+
           }
           if (typeof activeBranch === 'undefined' && typeof activeTree === 'undefined') {
             console.log("no branch no chocolate")
@@ -214,10 +214,6 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
           if(arg[0] == masterKeywords.getTreeStructureK && arg.length === 1 && typeof activeTree != 'undefined')  {
             getTreeStructure(activeTree)
           }
-         
-
-          ////// Treat with undefined objects
-
 
           ////// Master method: set active object // once method
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
@@ -255,9 +251,6 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
              //  throw("Cant open non existing subkey")
             }
             if (typeof eval("activeTree" + branchage) != 'undefined')  {
-              let branchName = eval("activeTree" + branchage)
-
-            //  console.log(activeTree[])
               if(branchageOriginal != branchage) {
               io.emit("channel1", "Active branch is: "+ activeTree._.name + branchage)
               treePath.push(arg[1])
