@@ -17,11 +17,11 @@ if (!fs.existsSync("./trees")){
 
 // Master keywords
 let masterKeywords = { //includes
-  createObjectK: 'new', // new
-  addToObjectK: 'push', // edit
-  setActiveObjectK: 'set', //set
-  listObjectsK: 'list', //list
-  navigateObject: 'sub',
+  createObjectK: 'n', // new
+  addToObjectK: 'a', // add
+  setActiveObjectK: 's', //set
+  listObjectsK: 'l', //list
+  navigateObject: 'ss', //set subkey as active
   getTreeStructureK: 'what' //
 }
 
@@ -30,9 +30,12 @@ let masterKeywordsHelper = {
   addToObjectK: ['add property to existing object: \''+ masterKeywords.addToObjectK+ '\''],
   setActiveObjectK: ['set active object: \''+ masterKeywords.setActiveObjectK + ' objname\''], //set
   listObjectsK: ['list object in tree folder: \''+ masterKeywords.listObjectsK + '\''], //list
-  navigateObject: ['navigate sub object: (unfinished method) \''+ masterKeywords.navigateObject + '\''], //list
+  navigateObject: ['set sub key as active: (unfinished method) \''+ masterKeywords.navigateObject + '\''], //list
   getTreeStructureK: ['print tree \''+ masterKeywords.getTreeStructureK + '\''] //list
 }
+
+// Data structure
+
 
 // New toString proto method for arrays (: instead of ,)
 Array.prototype.str = function() {
@@ -56,6 +59,11 @@ function show(obj) {
   }
 }
 
+// Store json 
+function store() {
+  fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8')
+  io.emit("channel1", "object modified and saved, added key " + arg[1])
+}
 
 // Methods to print arrays to the webbrowser
 function showarr(obj, type = 1) {
@@ -116,6 +124,13 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
               throw("Nikoumouk")
             }
           }
+          ////// Data Structure
+          const dataStruct = {
+            '_': {
+              'name': arg[1],
+               createdTime: new Date()
+               }
+          }
 
           ////// Create new obj using keyword routine
           if(arg[0] == masterKeywords.createObjectK && arg.length === 2 )  {
@@ -142,7 +157,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
          })
         }
 
-            ////// Prevent misuse of masterkeywords
+            ////// Prevent misuse of masterkeywords 
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 && arg[0] != masterKeywords.getTreeStructureK)  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
@@ -156,14 +171,29 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
           ////// master method: add property to existing object // branch level 1
           if(arg[0] == masterKeywords.addToObjectK && arg.length === 2 )  {
             try {
-           if (typeof activeTree != undefined && typeof activeBranch === 'undefined')  {
-             console.log("working on", activeTree._.name)
-             activeTree[arg[1]] = {'_': {'name': arg[1] }}
-             activeTree[arg[1]]._.createdTime = new Date()
-             fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
-             io.emit("channel1", "object modified and saved, added key " + activeTree._.name + "." + activeTree[arg[1]]._.name  )
-             show(activeTree)
-           }
+              if (typeof activeTree != undefined)  {
+                if (treePath.length == 0) {
+                  activeTree[arg[1]] = dataStruct
+                  store()
+                } else {
+                  console.log("activeTree" + branchage + "['" + arg[1] + "'] = " + dataStructStr)
+                  eval("activeTree" + branchage + "['" + arg[1] + "'] = " + dataStructStr)
+                  store()
+                }
+                
+              }
+          //  if (typeof activeTree != undefined && typeof activeBranch === 'undefined')  {
+          //    console.log("working on", activeTree._.name)
+          //    activeTree[arg[1]] = {'_': {'name': arg[1] }}
+          //    activeTree[arg[1]]._.createdTime = new Date()
+          //    fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
+          //    io.emit("channel1", "object modified and saved, added key " + activeTree._.name + "." + activeTree[arg[1]]._.name)
+          //    show(activeTree)
+          //    activeBranch = activeTree[arg[1].toString()]
+          //    console.log(treePath)
+          //    //treePath.push(activeBranch._.name)
+          //    console.log(activeBranch)
+          //  }
           } catch(e) {
             if (e.name == "ReferenceError") {
               if (e.message == "activeTree is not defined")
@@ -175,12 +205,13 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
           if (typeof activeBranch === 'undefined' && typeof activeTree === 'undefined') {
             console.log("no branch no chocolate")
           }
-          if(typeof activeBranch != 'undefined' && typeof activeTree != 'undefined') {
-            activeTree[activeBranch._.name][arg[1]] = {'_': {'name': arg[1], createdTime: new Date() }}
-           // console.log("choco", activeBranch._.name)
-            fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
+          // if(typeof activeBranch != 'undefined' && typeof activeTree != 'undefined') {
+          //   activeTree[activeBranch._.name][arg[1]] = {'_': {'name': arg[1], createdTime: new Date() }}
+          //   fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
+          //   
+          //   console.log(treePath)
            
-          }
+          // }
           }
 
           ////// Master method: list existing objects
@@ -194,9 +225,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
           }
 
           ////// Master method: print tree architecture
-          console.log(arg[0] == masterKeywords.getTreeStructureK, arg.length === 1)
           if(arg[0] == masterKeywords.getTreeStructureK && arg.length === 1 && typeof activeTree != 'undefined')  {
-            console.log("chocho")
             getTreeStructure(activeTree)
           }
          
@@ -204,12 +233,14 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
           ////// Treat with undefined objects
 
 
-          ////// Master method: set active object
+          ////// Master method: set active object // once method
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try {
                 if(e == null) {
                   activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
+                  treePath = []
+                  branchage = ""
                   io.emit("channel1", "object " + arg[1] + " is now active")
                   show(activeTree)
                   console.log(arg[1], "object loaded")
@@ -230,11 +261,21 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
              io.emit("channel1", "Can\'t navigate when object is not set")
              throw("Can\'t navigate when object is not set")
            }
-           else {
-            activeBranch = activeTree[arg[1].toString()]
-            console.log(activeBranch)
-            io.emit("channel1", "Active branch is: "+ activeTree._.name + "." + activeBranch._.name)
+
+           if (typeof activeTree != 'undefined') { //obj.nom //obj.nom.nom 
+            treePath.push(arg[1])
+              dataStructStr = JSON.stringify(dataStruct, null, 2)
+              branchage += "['" +arg[1]+ "']"
+            io.emit("channel1", "Active branch is: "+ treePath[treePath.length - 1])
+            console.log(treePath)
+
            }
+          //  else if (typeof activeTree != 'undefined' && typeof activeBranch != 'undefined') {
+          //    console.log("babi")
+          //     activeTree[treePath[1]][treePath[2]][arg[1]] = {'_': {'name': arg[1], createdTime: new Date() }}
+          //     console.log(activeTree)
+          //     fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8') 
+          //  }
          }
 
         /// Catch method for initial try:
