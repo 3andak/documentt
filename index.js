@@ -8,7 +8,7 @@ const { isObject, assign } = require('lodash');
 
 // Local vars
 const foldir = process.cwd() + "/public";
-let helperAtStartup = false 
+let helperAtStartup = true 
 
 //initialse local folder
 if (!fs.existsSync("./trees")){
@@ -21,8 +21,9 @@ let masterKeywords = { //includes
   addToObjectK: 'a', // add
   setActiveObjectK: 's', //set
   listObjectsK: 'l', //list
-  navigateObject: 'ss', //set subkey as active
-  getTreeStructureK: 'what' //
+  navigateObjectK: 'ss', //set subkey as active
+  getTreeStructureK: 'what', //
+  delTreeK: 'd',
 }
 
 let masterKeywordsHelper = {
@@ -30,8 +31,10 @@ let masterKeywordsHelper = {
   addToObjectK: ['add property to existing object: \''+ masterKeywords.addToObjectK+ '\''],
   setActiveObjectK: ['set active object: \''+ masterKeywords.setActiveObjectK + ' objname\''], //set
   listObjectsK: ['list object in tree folder: \''+ masterKeywords.listObjectsK + '\''], //list
-  navigateObject: ['set sub key as active: (unfinished method) \''+ masterKeywords.navigateObject + '\''], //list
-  getTreeStructureK: ['print tree \''+ masterKeywords.getTreeStructureK + '\''] //list
+  navigateObjectK: ['set sub key as active:  \''+ masterKeywords.navigateObjectK + '\''], //list
+  getTreeStructureK: ['print tree \''+ masterKeywords.getTreeStructureK + '\''], // what
+  delTreeK: ['delete active Tree/Branch:  \''+ masterKeywords.delTreeK + '\''], //del
+   
 }
 
 // Data structure
@@ -58,8 +61,6 @@ function show(obj) {
     }
   }
 }
-
-
 
 // Methods to print arrays to the webbrowser
 function showarr(obj, type = 1) {
@@ -161,7 +162,9 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
         }
 
             ////// Prevent general misuse of masterkeywords
-          if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 && arg[0] != masterKeywords.getTreeStructureK)  {
+          if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 
+            && arg[0] != masterKeywords.getTreeStructureK
+            && arg[0] != masterKeywords.delTreeK)  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3)  {
@@ -184,7 +187,6 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
                   eval("activeTree" + branchage + "['" + arg[1] + "'] = " + dataStructStr)
                   store(arg[1])
                 }
-
               }
           } catch(e) {
             if (e.name == "ReferenceError") {
@@ -215,6 +217,35 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
             getTreeStructure(activeTree)
           }
 
+          ////// Delete method 
+          if(arg[0] == masterKeywords.delTreeK && arg.length === 1 )  {
+            if(typeof activeTree == 'undefined') {
+              console.error("set active object first")
+              io.emit("channel1", "set active object obj before delete attempt")
+            }
+            else {
+              if (treePath.length == 0) {
+              try {
+              fs.unlinkSync(process.cwd() + "/trees/" + activeTree._.name + ".json");
+              io.emit("channel1", "current Tree " + activeTree._.name + " deleted")
+              } catch(e) {console.error(e)}
+              }
+               else if (treePath.length != 0) {
+                if (typeof eval("activeTree" + branchage) != 'undefined')  {
+                 // console.log("activeTree" + branchage)
+                  delete activeTree[eval(branchage)]
+                //   eval(delete + " activeTree" + branchage) 
+                  io.emit("channel1", "active branch " + branchage + " removed from Tree " + activeTree._.name )
+                  store()
+                }
+              }
+              
+              // console.log("a", activeTree)
+              // console.log("b", treePath)
+              // console.log("c", branchage )
+            }
+          }
+
           ////// Master method: set active object // once method
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
             fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
@@ -236,7 +267,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
             })
          }
          ////// Set subobject as active branch  // ss method
-         if(arg[0] == masterKeywords.navigateObject && arg.length === 2 )  {
+         if(arg[0] == masterKeywords.navigateObjectK && arg.length === 2 )  {
            if (typeof activeTree === 'undefined') {
              io.emit("channel1", "Can\'t navigate when object is not set")
              console.error("Can\'t navigate when object is not set")
