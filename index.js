@@ -102,9 +102,15 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
        fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8')
        io.emit("channel1", "object modified and saved, added key " + arg)
       }
+      clickValues = []
+      socket.on('channel3', (clickVal) => {
+        clickValues.unshift(clickVal)
+        clickValues.splice(2, 1)
+        console.log(clickValues)
+      })
+
 
         socket.on('channel1', (msg) => {
-
           // printing self to the browser
           io.emit('channel1', msg);
 
@@ -239,10 +245,6 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
                   store()
                 }
               }
-              
-              // console.log("a", activeTree)
-              // console.log("b", treePath)
-              // console.log("c", branchage )
             }
           }
 

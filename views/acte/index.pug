@@ -23,8 +23,21 @@ html
                     $("#json").text("");
                   });
                   socket.on('channel2', function(msg){
-                    $('#json').append($('<li>').text(msg));
+                    $('#json').append($('<li>').text(msg).click(function() {
+
+                      var firstClicked =  $(this).text();
+                      reactionFirstClick(firstClicked)
+                    }
+                    ))
                   });                  
+                 // const firstClickObj = document.getElementById("messages")
+                 // firstClickObj.addEventListener("click", reactionFirstClick)
+                  const reactionFirstClick = function(cur) {
+                    socket.emit('channel3', cur)
+                    console.log(cur)
+                  }
+                  
+
                 });
 
         ul(id="messages")
