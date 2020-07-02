@@ -38,6 +38,12 @@ let masterKeywordsHelper = {
 }
 
 // Data structure
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 
 // New toString proto method for arrays (: instead of ,)
@@ -77,7 +83,14 @@ function showarr(obj, type = 1) {
 }
 
 // Method to read Tree architecture of Object
-getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o[k],k=s?s+['.'+k]:k,io.emit("channel2", k)   ))
+getTreeStructure = (o,s) => {
+  console.log(s)
+  !o | [o]==o || Object.keys(o).map(
+  k => getTreeStructure(o[k],
+     k=s
+     ?s+['[\''+k+ '\']'  ]
+     :'[\'' + k + '\']',
+     io.emit("channel2", k)   )) }
 
 // Serving app
     app.set("view engine", "pug");
@@ -102,13 +115,23 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
        fs.writeFileSync(process.cwd() + "/trees/" + activeTree._.name + ".json", JSON.stringify(activeTree, null, 2), 'utf8')
        io.emit("channel1", "object modified and saved, added key " + arg)
       }
+
       clickValues = []
       socket.on('channel3', (clickVal) => {
         clickValues.unshift(clickVal)
         clickValues.splice(2, 1)
         console.log(clickValues)
+      let computedCurClicked = eval("activeTree" + clickValues[0])
+      io.emit('channel3', computedCurClicked)
+      //  console.log(eval("activeTree" + clickValues[0]))
       })
 
+      socket.on('channel4', (submittedVal) => {
+        let submittedValStr = JSON.stringify(submittedVal)
+        eval("activeTree" + clickValues[0] + " = " + submittedValStr)
+       // console.log(submittedVal)
+        store(submittedValStr)
+      })
 
         socket.on('channel1', (msg) => {
           // printing self to the browser
@@ -138,6 +161,10 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
           const dataStruct = {
             '_': {
               'name': arg[1],
+              'value': "",
+              'id': uuidv4(),
+              'type': "object",
+              'rel' : [],
                createdTime: new Date()
                }
           }
@@ -156,8 +183,7 @@ getTreeStructure = (o,s)=>!o|[o]==o||Object.keys(o).map( k => getTreeStructure(o
              else {
 
              ////// Actual create object method
-             var tree = {'_': {'name': arg[1] }}
-             tree._.createdTime = new Date()
+             var tree = dataStruct
               // Print obj to webbrowser
              show(tree)
               // Write local json file

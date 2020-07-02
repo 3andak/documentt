@@ -12,7 +12,7 @@ html
           script.
                 $(function () {
                   var socket = io();
-                  $('form').submit(function(e) {
+                  $('#talk').submit(function(e) {
                     e.preventDefault(); // prevents page reloading
                     socket.emit('channel1', $('#m').val());
                     $('#m').val('');
@@ -24,25 +24,35 @@ html
                   });
                   socket.on('channel2', function(msg){
                     $('#json').append($('<li>').text(msg).click(function() {
-
                       var firstClicked =  $(this).text();
+                    $(this).addClass("clicked")
                       reactionFirstClick(firstClicked)
-                    }
-                    ))
-                  });                  
+
+                    }))
+                    socket.on('channel3', function(msg){
+                       $("#dialogue").val(msg)
+                    })
+                     $('#dialog').submit(function(e) {
+                    e.preventDefault(); // prevents page reloading
+                    socket.emit('channel4', $('#dialogue').val());
+                    return false;
+                  });
+                  
+                  });
                  // const firstClickObj = document.getElementById("messages")
                  // firstClickObj.addEventListener("click", reactionFirstClick)
                   const reactionFirstClick = function(cur) {
                     socket.emit('channel3', cur)
                     console.log(cur)
                   }
-                  
-
                 });
 
         ul(id="messages")
         ul(id="json")
-        form(action="")
+        form(id="dialog" action="")
+          input(id="dialogue" autocomplete="off") 
+          button()= "send"
+        form(id="talk" action="")
           input(id="m" autocomplete="off") 
           button()= "send"
 
