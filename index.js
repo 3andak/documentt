@@ -24,7 +24,9 @@ let masterKeywords = { //includes
   navigateObjectK: 'ss', //set subkey as active
   getTreeStructureK: 'what', //
   delTreeK: 'd',
+  showTreeK: 'where',
 }
+let i = 0;
 
 let masterKeywordsHelper = {
   createObjectK: ['create an object: \''+ masterKeywords.createObjectK + ' objname\''], // new
@@ -34,6 +36,7 @@ let masterKeywordsHelper = {
   navigateObjectK: ['set sub key as active:  \''+ masterKeywords.navigateObjectK + '\''], //list
   getTreeStructureK: ['print tree \''+ masterKeywords.getTreeStructureK + '\''], // what
   delTreeK: ['delete active Tree/Branch:  \''+ masterKeywords.delTreeK + '\''], //del
+  showTreeK: ['show active path:  \''+ masterKeywords.showTreeK + '\''], //del
    
 }
 
@@ -90,7 +93,8 @@ getTreeStructure = (o,s) => {
      k=s
      ?s+['[\''+k+ '\']'  ]
      :'[\'' + k + '\']',
-     io.emit("channel2", k)   )) }
+     io.emit("channel2", k)   ))
+     i = 0 }
 
 // Serving app
     app.set("view engine", "pug");
@@ -127,10 +131,18 @@ getTreeStructure = (o,s) => {
       })
 
       socket.on('channel4', (submittedVal) => {
-        let submittedValStr = JSON.stringify(submittedVal)
-        eval("activeTree" + clickValues[0] + " = " + submittedValStr)
-       // console.log(submittedVal)
-        store(submittedValStr)
+        if (i >= 1) {
+          
+        }
+        else {
+          console.log(i)
+          let submittedValStr = JSON.stringify(submittedVal)
+          eval("activeTree" + clickValues[0] + " = " + submittedValStr)
+         // console.log(submittedVal)
+          store(submittedValStr)
+          socket.emit('channel4', 'disconnect');
+          i+=1
+        }
       })
 
         socket.on('channel1', (msg) => {
@@ -169,6 +181,16 @@ getTreeStructure = (o,s) => {
                }
           }
 
+          const subdataStruct = {
+            '_': {
+              'name': arg[1],
+              'value': "",
+              'type': "object",
+              'rel': [],
+               modifiedDate: new Date()
+               }
+          }
+
           ////// Create new obj using keyword routine
           if(arg[0] == masterKeywords.createObjectK && arg.length === 2 )  {
 
@@ -185,7 +207,7 @@ getTreeStructure = (o,s) => {
              ////// Actual create object method
              var tree = dataStruct
               // Print obj to webbrowser
-             show(tree)
+              getTreeStructure(tree)
               // Write local json file
              fs.writeFileSync(process.cwd() + "/trees/" + tree._.name + ".json", JSON.stringify(tree, null, 2), 'utf8') 
             }
@@ -196,6 +218,7 @@ getTreeStructure = (o,s) => {
             ////// Prevent general misuse of masterkeywords
           if(arg[0] != masterKeywords.listObjectsK && arg.length === 1 
             && arg[0] != masterKeywords.getTreeStructureK
+            && arg[0] != masterKeywords.showTreeK
             && arg[0] != masterKeywords.delTreeK)  {
             if (Object.values(masterKeywords).includes(arg[0]) == true && arg.length == 1
              || Object.values(masterKeywords).includes(arg[0]) == true && arg.length >= 3
@@ -206,12 +229,12 @@ getTreeStructure = (o,s) => {
             }
           }
 
-          ////// master method: add property to existing object // branch level 1
+          ////// master method: add property to existing object // subbranch level 
           if(arg[0] == masterKeywords.addToObjectK && arg.length === 2 )  {
             try {
               if (typeof activeTree != undefined)  {
                 if (treePath.length == 0) {
-                  activeTree[arg[1]] = dataStruct
+                  activeTree[arg[1]] = subdataStruct
                   store(arg[1])
                 } else {
                   dataStructStr = JSON.stringify(dataStruct, null, 2)
@@ -249,6 +272,10 @@ getTreeStructure = (o,s) => {
             getTreeStructure(activeTree)
           }
 
+          ////// Master method: print current folder 
+          if(arg[0] == masterKeywords.showTreeK && arg.length === 1 && typeof activeTree != 'undefined')  {
+            io.emit("channel1", "current is:" + activeTree._.name + branchage )
+          }          
           ////// Delete method 
           if(arg[0] == masterKeywords.delTreeK && arg.length === 1 )  {
             if(typeof activeTree == 'undefined') {
@@ -264,9 +291,30 @@ getTreeStructure = (o,s) => {
               }
                else if (treePath.length != 0) {
                 if (typeof eval("activeTree" + branchage) != 'undefined')  {
-                 // console.log("activeTree" + branchage)
-                  delete activeTree[eval(branchage)]
-                //   eval(delete + " activeTree" + branchage) 
+                 // delete activeTree[eval(branchage)]
+                 console.log(treePath)
+                   if (treePath.length == 1) {
+                   delete activeTree[treePath[0]]
+                   }
+                   if (treePath.length == 2) {
+                   delete activeTree[treePath[0]][treePath[1]]
+                   }
+                   if (treePath.length == 3) {
+                   delete activeTree[treePath[0]][treePath[1]][treePath[2]]
+                   }
+                   if (treePath.length == 4) {
+                    delete activeTree[treePath[0]][treePath[1]][treePath[2]][treePath[3]]
+                   }
+                   if (treePath.length == 5) {
+                    delete activeTree[treePath[0]][treePath[1]][treePath[2]][treePath[3]][treePath[4]]
+                   }
+                   if (treePath.length == 6) {
+                    delete activeTree[treePath[0]][treePath[1]][treePath[2]][treePath[3]][treePath[4]][treePath[5]]
+                   }
+                   if (treePath.length == 7) {
+                    delete activeTree[treePath[0]][treePath[1]][treePath[2]][treePath[3]][treePath[4]][treePath[5]][treePath[6]]
+                   }
+
                   io.emit("channel1", "active branch " + branchage + " removed from Tree " + activeTree._.name )
                   store()
                 }
@@ -283,7 +331,7 @@ getTreeStructure = (o,s) => {
                   treePath = []
                   branchage = ""
                   io.emit("channel1", "object " + arg[1] + " is now active")
-                  show(activeTree)
+                  getTreeStructure(activeTree)
                   console.log(arg[1], "object loaded")
                  }
                 // Prevent set method to activate non-existing object
@@ -313,7 +361,8 @@ getTreeStructure = (o,s) => {
               if(branchageOriginal != branchage) {
               io.emit("channel1", "Active branch is: "+ activeTree._.name + branchage)
               treePath.push(arg[1])
-              console.log(treePath)
+              getTreeStructure(activeTree)
+              //console.log(treePath)
             }
             }
 

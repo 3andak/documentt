@@ -33,7 +33,7 @@ html
                        $("#dialogue").val(msg)
                     })
                      $('#dialog').submit(function(e) {
-                    e.preventDefault(); // prevents page reloading
+                   
                     socket.emit('channel4', $('#dialogue').val());
                     return false;
                   });
