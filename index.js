@@ -5,7 +5,7 @@ const io = require('socket.io')(server);
 
 const fs = require("fs");
 const { isObject, assign } = require('lodash');
-const ovh = false
+const ovh = true
 
 // Local vars
 const foldir = process.cwd() + "/public";
@@ -133,7 +133,7 @@ getTreeStructure = (o,s) => {
 
       socket.on('channel4', (submittedVal) => {
         if (i >= 1) {
-          
+       // do nothing (prevent socket mltiple rquest)
         }
         else {
           console.log(i)
@@ -328,7 +328,7 @@ getTreeStructure = (o,s) => {
 
           ////// Master method: set active object // once method
           if(arg[0] == masterKeywords.setActiveObjectK && arg.length === 2 )  {
-            fs.access(process.cwd() + "\\trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
+            fs.access(process.cwd() + "/trees/" + arg[1] + ".json", fs.constants.F_OK, (e) => {
               try {
                 if(e == null) {
                   activeTree = JSON.parse(fs.readFileSync(process.cwd() + "\\trees\\" + arg[1] + ".json"))
@@ -379,7 +379,7 @@ getTreeStructure = (o,s) => {
       });
 
 if (ovh) {
-server.listen(80);
+server.listen(9171);
 }
 else {
   server.listen(80);
