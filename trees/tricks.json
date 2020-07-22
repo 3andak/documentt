@@ -1,0 +1,40 @@
+{
+  "_": {
+    "name": "tricks",
+    "value": "",
+    "id": "9c7a49be-f432-4314-b95d-1822827728ec",
+    "type": "object",
+    "rel": [],
+    "createdTime": "2020-07-03T19:41:45.632Z"
+  },
+  "windows": {
+    "_": {
+      "name": "windows",
+      "value": "",
+      "id": "51449560-884d-42c5-ab4b-ce32c3b44235",
+      "type": "object",
+      "rel": [],
+      "createdTime": "2020-07-03T19:41:56.995Z"
+    },
+    "wifi": {
+      "_": {
+        "name": "wifi",
+        "value": "",
+        "id": "a0cb6d60-f489-48dd-beb7-3ac23285b65f",
+        "type": "object",
+        "rel": [],
+        "createdTime": "2020-07-03T19:42:29.618Z"
+      },
+      "password": {
+        "_": {
+          "name": "password",
+          "value": "to retrieve local passwords use : netsh wlan show profile name=\"prof name\"  key=clear",
+          "id": "e7e2cee4-f6b8-48ff-9a14-714df0fa933e",
+          "type": "object",
+          "rel": [],
+          "createdTime": "2020-07-03T19:42:41.163Z"
+        }
+      }
+    }
+  }
+}

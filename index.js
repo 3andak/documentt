@@ -5,6 +5,7 @@ const io = require('socket.io')(server);
 
 const fs = require("fs");
 const { isObject, assign } = require('lodash');
+const ovh = false
 
 // Local vars
 const foldir = process.cwd() + "/public";
@@ -275,7 +276,10 @@ getTreeStructure = (o,s) => {
           ////// Master method: print current folder 
           if(arg[0] == masterKeywords.showTreeK && arg.length === 1 && typeof activeTree != 'undefined')  {
             io.emit("channel1", "current is:" + activeTree._.name + branchage )
-          }          
+          }
+          if(arg[0] == masterKeywords.showTreeK && arg.length === 1 && typeof activeTree == 'undefined') {
+            io.emit("channel1", "nowhere" )
+          }
           ////// Delete method 
           if(arg[0] == masterKeywords.delTreeK && arg.length === 1 )  {
             if(typeof activeTree == 'undefined') {
@@ -374,5 +378,9 @@ getTreeStructure = (o,s) => {
         });
       });
 
-
+if (ovh) {
 server.listen(80);
+}
+else {
+  server.listen(80);
+}
